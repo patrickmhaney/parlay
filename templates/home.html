@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+
+
+{% block content %}
+<style>
+  .hide { position:absolute; top:-1px; left:-1px; width:1px; height:1px; }
+</style>
+
+<iframe name="hiddenFrame" class="hide"></iframe>
+
+
+<form action="/bet" method="POST" target="hiddenFrame" id="myForm">
+  <label for="bet_types">Select an option:</label>
+  <select name="bet_type" id="bet_types">
+      <option value="Over">Over</option>
+      <option value="Under">Under</option>
+      <option value="Spread">Spread</option>
+  </select>
+  <label for="player_names">Select an option:</label>
+  <select name="player_name" id="player_names">
+      <option value="Pat">Pat</option>
+      <option value="Ben">Ben</option>
+      <option value="Hank">Hank</option>
+      <option value="Leland">Leland</option>
+      <option value="optionc">BD</option>
+  </select>
+  <button type="submit" onClick=" setTimeout(function() {
+    window.location.reload();
+}, 500);">Submit</button> 
+</form>
+
+
+
+
+<table class="ui celled table">
+    <thead>
+      <tr><th>id</th>
+      <th>bet_type</th>
+      <th>player_name</th>
+      <th>value</th>
+      <th>active_flag</th>
+    </tr></thead>
+    <tbody>
+      {% for bet in bets %}
+      <tr>
+        <td>{{ bet.id }}</td>
+        <td>{{ bet.bet_type }}</td>
+        <td>{{ bet.player_name }}</td>
+        <td>{{ bet.value }}</td>
+        <td>{{ bet.active_flag }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
