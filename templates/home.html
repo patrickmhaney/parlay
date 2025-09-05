@@ -4,29 +4,149 @@
 {% block content %}
 <style>
   .hide { position:absolute; top:-1px; left:-1px; width:1px; height:1px; }
+    .grid-container2 {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 20px;
+    padding: 10px; /* Added padding for better spacing */
+    width: 100%; /* Make the form fill the entire screen width */
+  }
+
+  /* Increase font size for selectors and label text */
+  label, select, button {
+    font-size: 28px; /* Adjust the font size as needed */
+  }
+
 </style>
 
 <iframe name="hiddenFrame" class="hide"></iframe>
 
 
-<form action="/bet" method="POST" target="hiddenFrame" id="myForm">
-  <label for="bet_types">Select an option:</label>
-  <select name="bet_type" id="bet_types">
-      <option value="Over">Over</option>
-      <option value="Under">Under</option>
-      <option value="Spread">Spread</option>
-  </select>
-  <label for="player_names">Select an option:</label>
+<form action="/bet" method="POST" target="hiddenFrame" id="myForm" class="grid-container2">
+ <div>
+  <label for="player_names">Select your name:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
   <select name="player_name" id="player_names">
       <option value="Pat">Pat</option>
       <option value="Ben">Ben</option>
       <option value="Hank">Hank</option>
       <option value="Leland">Leland</option>
-      <option value="optionc">BD</option>
+      <option value="BD">BD</option>
   </select>
+ </div>
+ <div>
+  <label for="weeks">Select an NFL week:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+  <select name="week" id="weeks">
+      <option value=1>1</option>
+      <option value=2>2</option>
+      <option value=3>3</option>
+      <option value=4>4</option>
+      <option value=5>5</option>
+      <option value=6>6</option>
+      <option value=7>7</option>
+      <option value=8>8</option>
+      <option value=9>9</option>
+      <option value=10>10</option>
+      <option value=11>11</option>
+      <option value=12>12</option>
+      <option value=13>13</option>
+      <option value=14>14</option>
+      <option value=15>15</option>
+      <option value=16>16</option>
+      <option value=17>17</option>
+      <option value=18>18</option>
+  </select>
+ </div>
+ <div>
+  <label for="winning_teams">Select a winning team:&nbsp;</label>
+  <select name="winning_team" id="winning_teams">
+      <option value="Arizona Cardinals">Arizona Cardinals</option>
+      <option value="Atlanta Falcons">Atlanta Falcons</option>
+      <option value="Baltimore Ravens">Baltimore Ravens</option>
+      <option value="Buffalo Bills">Buffalo Bills</option>
+      <option value="Carolina Panthers">Carolina Panthers</option>
+      <option value="Chicago Bears">Chicago Bears</option>
+      <option value="Cincinnati Bengals">Cincinnati Bengals</option>
+      <option value="Cleveland Browns">Cleveland Browns</option>
+      <option value="Dallas Cowboys">Dallas Cowboys</option>
+      <option value="Denver Broncos">Denver Broncos</option>
+      <option value="Detroit Lions">Detroit Lions</option>
+      <option value="Green Bay Packers">Green Bay Packers</option>
+      <option value="Houston Texans">Houston Texans</option>
+      <option value="Indianapolis Colts">Indianapolis Colts</option>
+      <option value="Jacksonville Jaguars">Jacksonville Jaguars</option>
+      <option value="Kansas City Chiefs">Kansas City Chiefs</option>
+      <option value="Las Vegas Raiders">Las Vegas Raiders</option>
+      <option value="Los Angeles Chargers">Los Angeles Chargers</option>
+      <option value="Los Angeles Rams">Los Angeles Rams</option>
+      <option value="Miami Dolphins">Miami Dolphins</option>
+      <option value="Minnesota Vikings">Minnesota Vikings</option>
+      <option value="New England Patriots">New England Patriots</option>
+      <option value="New Orleans Saints">New Orleans Saints</option>
+      <option value="New York Giants">New York Giants</option>
+      <option value="New York Jets">New York Jets</option>
+      <option value="Philadelphia Eagles">Philadelphia Eagles</option>
+      <option value="Pittsburgh Steelers">Pittsburgh Steelers</option>
+      <option value="San Francisco 49ers">San Francisco 49ers</option>
+      <option value="Seattle Seahawks">Seattle Seahawks</option>
+      <option value="Tampa Bay Buccaneers">Tampa Bay Buccaneers</option>
+      <option value="Tennessee Titans">Tennessee Titans</option>
+      <option value="Washington Commanders">Washington Commanders</option>
+  </select>
+ </div>
+ <div>
+  <label for="losing_teams">Select a losing team:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+  <select name="losing_team" id="losing_teams">
+      <option value="Arizona Cardinals">Arizona Cardinals</option>
+      <option value="Atlanta Falcons">Atlanta Falcons</option>
+      <option value="Baltimore Ravens">Baltimore Ravens</option>
+      <option value="Buffalo Bills">Buffalo Bills</option>
+      <option value="Carolina Panthers">Carolina Panthers</option>
+      <option value="Chicago Bears">Chicago Bears</option>
+      <option value="Cincinnati Bengals">Cincinnati Bengals</option>
+      <option value="Cleveland Browns">Cleveland Browns</option>
+      <option value="Dallas Cowboys">Dallas Cowboys</option>
+      <option value="Denver Broncos">Denver Broncos</option>
+      <option value="Detroit Lions">Detroit Lions</option>
+      <option value="Green Bay Packers">Green Bay Packers</option>
+      <option value="Houston Texans">Houston Texans</option>
+      <option value="Indianapolis Colts">Indianapolis Colts</option>
+      <option value="Jacksonville Jaguars">Jacksonville Jaguars</option>
+      <option value="Kansas City Chiefs">Kansas City Chiefs</option>
+      <option value="Las Vegas Raiders">Las Vegas Raiders</option>
+      <option value="Los Angeles Chargers">Los Angeles Chargers</option>
+      <option value="Los Angeles Rams">Los Angeles Rams</option>
+      <option value="Miami Dolphins">Miami Dolphins</option>
+      <option value="Minnesota Vikings">Minnesota Vikings</option>
+      <option value="New England Patriots">New England Patriots</option>
+      <option value="New Orleans Saints">New Orleans Saints</option>
+      <option value="New York Giants">New York Giants</option>
+      <option value="New York Jets">New York Jets</option>
+      <option value="Philadelphia Eagles">Philadelphia Eagles</option>
+      <option value="Pittsburgh Steelers">Pittsburgh Steelers</option>
+      <option value="San Francisco 49ers">San Francisco 49ers</option>
+      <option value="Seattle Seahawks">Seattle Seahawks</option>
+      <option value="Tampa Bay Buccaneers">Tampa Bay Buccaneers</option>
+      <option value="Tennessee Titans">Tennessee Titans</option>
+      <option value="Washington Commanders">Washington Commanders</option>
+  </select>
+ </div>
+ <div>
+  <label for="bet_types">Select a bet type:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+  <select name="bet_type" id="bet_types">
+      <option value="Over">Over</option>
+      <option value="Under">Under</option>
+      <option value="Spread">Spread</option>
+  </select>
+ </div>
+ <div>
+   <label for="values">Enter your total or spread:&nbsp;&nbsp;</label>
+   <input type="text" name="value" id="value" required>
+ </div>
+ <div>
   <button type="submit" onClick=" setTimeout(function() {
     window.location.reload();
 }, 500);">Submit</button> 
+ </div>
 </form>
 
 
@@ -36,18 +156,22 @@
     <thead>
       <tr><th>id</th>
       <th>bet_type</th>
+      <th>week</th>
       <th>player_name</th>
+      <th>winning_team</th>
+      <th>losing_team</th>
       <th>value</th>
-      <th>active_flag</th>
     </tr></thead>
     <tbody>
       {% for bet in bets %}
       <tr>
         <td>{{ bet.id }}</td>
         <td>{{ bet.bet_type }}</td>
+        <td>{{ bet.week }}</td>
         <td>{{ bet.player_name }}</td>
+        <td>{{ bet.winning_team }}</td>
+        <td>{{ bet.losing_team }}</td>
         <td>{{ bet.value }}</td>
-        <td>{{ bet.active_flag }}</td>
       </tr>
       {% endfor %}
     </tbody>
