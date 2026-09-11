@@ -10,6 +10,16 @@
   font-display: swap;
 }
 
+/* The wordmark: Exo 2 Black Italic, subset to just the letters of "Parlay"
+   (1.2 KB). SIL Open Font License -- see static/fonts/OFL-Exo2.txt. */
+@font-face {
+  font-family: "Parlay Wordmark";
+  src: url("/static/fonts/Exo2-BlackItalic-Parlay.woff2?v=1") format("woff2");
+  font-weight: 900;
+  font-style: italic;
+  font-display: block;
+}
+
 /* Monochrome interface; colour only means a result. Follows the system
    light/dark setting -- there is no in-app toggle. */
 :root {
@@ -67,6 +77,13 @@
 }
 
 @layer components {
+  .wordmark {
+    font-family: "Parlay Wordmark", Geist, system-ui, sans-serif;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: -0.01em;
+    padding-right: 0.08em;          /* room for the italic y */
+  }
   /* --- buttons: one primary per screen --- */
   .btn {
     @apply inline-flex items-center justify-center rounded-lg px-4 h-10 text-sm font-medium

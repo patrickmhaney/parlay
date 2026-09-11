@@ -9,6 +9,7 @@
   <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="{{ url_for('static', path='favicon.svg') }}?v={{ asset_v }}" type="image/svg+xml">
   <link rel="preload" href="/static/fonts/Geist-Variable.woff2?v=1" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/Exo2-BlackItalic-Parlay.woff2?v=1" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}?v={{ asset_v }}">
   <script src="{{ url_for('static', path='js/htmx.min.js') }}?v={{ asset_v }}" defer></script>
 </head>
@@ -28,7 +29,7 @@
 
 <header class="sticky top-0 z-30 bg-bg border-b border-line">
   <div class="max-w-app mx-auto px-5 h-16 flex items-center">
-    <a href="/" class="text-[1.875rem] leading-none font-extrabold tracking-[-0.04em]"><span class="text-brand">Par</span><span class="text-ink">lay</span></a>
+    <a href="/" class="wordmark text-[1.875rem] leading-none" aria-label="Parlay, home"><span class="text-brand">Par</span><span class="text-ink">lay</span></a>
     {% if tabs %}
       <nav class="ml-auto hidden sm:flex items-center gap-6" aria-label="Main">
         {% for key, text, href, icon in tabs %}
