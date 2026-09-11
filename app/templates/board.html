@@ -9,7 +9,7 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
   </a>
   <div class="relative">
-    <h1 class="text-xl font-semibold px-1 whitespace-nowrap">Week {{ week }}</h1>
+    <h1 class="text-lg font-semibold px-1 whitespace-nowrap">Week {{ week }}</h1>
     <select aria-label="Choose week" class="absolute inset-0 opacity-0 cursor-pointer"
             onchange="location.href='{{ url_for('board', slug=syndicate.slug) }}?week='+this.value+'{{ q }}'">
       {% for w in all_weeks %}<option value="{{ w }}" {{ 'selected' if w == week }}>Week {{ w }}</option>{% endfor %}

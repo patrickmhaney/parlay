@@ -352,20 +352,31 @@ def test_stats_leads_with_parlays_and_geese(client, db):
     assert row.rstrip().endswith('<td class="n text-muted">1</td>')
 
 
-def test_results_text_goes_out_once_per_season_and_week(db):
+def test_no_results_text_when_the_parlay_misses(db):
     from app.config import get_settings
     from app.services import scheduler
     syn, a, b = _two_person_week(db, 2, True, False, "texty")
     db.execute("UPDATE users SET phone = '5550000000' WHERE id = ?", [a["id"]])
+    scheduler._send_results(db, get_settings())
+    assert db.value("SELECT COUNT(*) FROM notifications WHERE syndicate_id = ? AND kind = 'results'",
+                    [syn["id"]]) == 0
+    # still marked done, so a later run doesn't reconsider it
+    assert db.value("SELECT COUNT(*) FROM results_sent WHERE syndicate_id = ?", [syn["id"]]) == 1
+
+
+def test_results_text_goes_out_once_when_the_parlay_hits(db):
+    from app.config import get_settings
+    from app.services import scheduler
+    syn, a, b = _two_person_week(db, 4, True, True, "winners")
+    db.execute("UPDATE users SET phone = '5550000002' WHERE id = ?", [a["id"]])
     count = lambda: db.value(
         "SELECT COUNT(*) FROM notifications WHERE syndicate_id = ? AND kind = 'results'", [syn["id"]])
     scheduler._send_results(db, get_settings())
     assert count() == 1
     body = db.value("SELECT body FROM notifications WHERE syndicate_id = ? AND kind = 'results'", [syn["id"]])
-    assert body.startswith("Week 2: parlay missed. textyB is the goose.")
+    assert body.startswith("Week 4: THE PARLAY HIT!")
     scheduler._send_results(db, get_settings())
     assert count() == 1                                     # not again
-    assert db.value("SELECT COUNT(*) FROM results_sent WHERE syndicate_id = ?", [syn["id"]]) == 1
 
 
 def test_signing_in_without_a_syndicate_does_not_loop(client, db):

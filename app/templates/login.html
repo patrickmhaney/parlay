@@ -2,7 +2,7 @@
 {% block title %}{{ 'New syndicate' if new else 'Sign in' }} · Parlay{% endblock %}
 {% block content %}
 <div class="max-w-xs mx-auto pt-16 sm:pt-24">
-  <h1 class="text-xl font-semibold mb-8">{{ 'New syndicate' if new else 'Sign in' }}</h1>
+  <h1 class="text-lg font-semibold mb-8">{{ 'New syndicate' if new else 'Sign in' }}</h1>
 
   <form method="post" action="/login" class="space-y-4">
     {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}

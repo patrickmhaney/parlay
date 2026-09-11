@@ -129,24 +129,24 @@ sportsbook rules:
 
 This shows at the top of the Board for each week.
 
-## 8. The results text
+## 8. The results text (only when you win)
 
 **Trigger:** every morning at **7:00** (6:00 once clocks go back in
-November), the site does a final score refresh and grading pass, then checks
-for a week where **every pick is graded** and the results text **hasn't been
-sent**. In practice that's Tuesday morning, after Monday night's game:
+November), the site does a final score refresh and grading pass, then looks
+for a week where **every pick is graded**. In practice that's Tuesday
+morning, after Monday night's game.
 
-```
-Week 13: parlay missed. BD is the goose.
--BD: L  Giants +7.5
--Ben: W  Under 35.5 49ers/Browns
-...
-```
+- **If the parlay hit**, everyone gets:
+  ```
+  Week 3: THE PARLAY HIT!
+  -BD: W  Under 38.5 Giants/Browns
+  ...
+  ```
+- **If it missed, no text.** Nobody needs reminding. The week is marked done
+  either way, so it's never reconsidered, and it's on the Board and in Stats
+  as usual.
 
-When the parlay hits, it opens with **"THE PARLAY HIT!"** instead.
-
-Like the other text, it's sent once per week. Every past season's week is
-already marked as sent, so old results can never go out.
+Every past season's week is already marked done, so old results never go out.
 
 ## 9. Stats
 
@@ -165,7 +165,7 @@ All computed live from graded picks. Filter by season or all time.
 |---|---|
 | Any time | Picks shown as they're made; the board locks and texts on the last pick |
 | Every hour at :17 | Lines and scores refresh; finished games are graded |
-| 7:00 AM daily | Final refresh and grading; the results text for any finished week |
+| 7:00 AM daily | Final refresh and grading; a text if a finished week's parlay hit |
 | Midnight | Expired sign-in links and sessions are cleaned up |
 
 ## 11. Not automated yet, and things to know
@@ -178,8 +178,8 @@ All computed live from graded picks. Filter by season or all time.
   correction, but there's no button for it yet. Grading has been right on all
   265 historical picks, but if ESPN ever posts a wrong score, a fix currently
   means asking me.
-- **Textbelt credits:** 168 left. Each week sends 5 "picks are in" and 5
-  results texts, and longer texts can count as two credits, so expect to
+- **Textbelt credits:** 168 left. Each week sends 5 "picks are in" texts (plus 5 more
+  in the rare week the parlay hits), and longer texts can count as two credits, so expect to
   top up partway through the season.
 - **Game lines are a starting point.** They're DraftKings' number as of the
   last hourly refresh; enter your own book's number if it differs.

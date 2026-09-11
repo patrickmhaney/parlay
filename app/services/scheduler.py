@@ -83,10 +83,13 @@ def _send_results(db, settings) -> None:
         if not rows:
             continue
         parlay = stats_repo.week_parlay(db, syn["id"], season, week)
-        message = notify.results_message(week, rows, settings.base_url, parlay)
-        for m in users_repo.members(db, syn["id"]):
-            if m.get("phone"):
-                notify.send_sms(db, m["phone"], message, "results", syn["id"])
+        # Only text when the parlay hits -- nobody needs reminding they lost.
+        # A missed week is still marked done so it's never reconsidered.
+        if parlay.status == "HIT":
+            message = notify.results_message(week, rows, settings.base_url, parlay)
+            for m in users_repo.members(db, syn["id"]):
+                if m.get("phone"):
+                    notify.send_sms(db, m["phone"], message, "results", syn["id"])
         db.execute(
             "INSERT INTO results_sent VALUES (?, ?, ?, now()::TIMESTAMP) ON CONFLICT DO NOTHING",
             [syn["id"], season, week],

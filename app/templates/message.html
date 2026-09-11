@@ -2,7 +2,7 @@
 {% block title %}{{ heading }} · Parlay{% endblock %}
 {% block content %}
 <div class="max-w-xs mx-auto pt-16 sm:pt-24">
-  <h1 class="text-xl font-semibold">{{ heading }}</h1>
+  <h1 class="text-lg font-semibold">{{ heading }}</h1>
   {% if body %}<p class="mt-2 text-muted">{{ body }}</p>{% endif %}
   {% if link %}<a href="{{ link }}" class="btn btn-primary w-full mt-8">{{ link_text or 'Continue' }}</a>{% endif %}
 </div>

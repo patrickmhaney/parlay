@@ -13,6 +13,7 @@ module.exports = {
         win:     "var(--win)",
         loss:    "var(--loss)",
         push:    "var(--push)",
+        brand:   "var(--brand)",
       },
       fontFamily: {
         sans: ["Geist", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
