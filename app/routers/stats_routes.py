@@ -67,7 +67,7 @@ def stats_page(request: Request, slug: str, season: int | None = None):
         "seasons": seasons,
         "chart_season": chart_season,
         "parlays": stats_repo.parlay_summary(weeks),
-        "geese": stats_repo.goose_counts(db, sid, weeks),
+        "geese": {g["display_name"]: g["count"] for g in stats_repo.goose_counts(db, sid, weeks)},
         "totals": stats_repo.syndicate_totals(db, sid, season),
         "board": board,
         "streaks": sorted(stats_repo.streaks(db, sid),

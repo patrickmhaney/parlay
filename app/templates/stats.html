@@ -22,8 +22,6 @@
   <div><dt class="text-sm text-muted">Parlays hit</dt>
        <dd class="text-lg font-semibold"><span class="{{ 'pos' if parlays.hits }}">{{ parlays.hits|length }}</span>
          <span class="text-muted font-normal">of {{ parlays.settled }}</span></dd></div>
-  <div><dt class="text-sm text-muted">Geese</dt>
-       <dd class="text-lg font-semibold">{{ parlays.geese }}</dd></div>
   <div><dt class="text-sm text-muted">Legs</dt>
        <dd class="text-lg font-semibold">{{ record(totals.wins, totals.losses, totals.pushes) }}</dd></div>
 </dl>
@@ -46,32 +44,17 @@
   {% endif %}
 </section>
 
-<section aria-labelledby="goose">
-  <h2 id="goose" class="section-title">Goose count</h2>
-  <table class="table">
-    <thead><tr><th>Player</th><th class="n">Geese</th><th class="n">Last</th></tr></thead>
-    <tbody>
-      {% for g in geese %}
-        <tr>
-          <td class="font-medium">{{ g.display_name }}</td>
-          <td class="n {{ 'neg font-semibold' if g.count == geese[0].count and g.count }}">{{ g.count }}</td>
-          <td class="n text-muted">{% if g.last %}{{ g.last[0] }} · Wk {{ g.last[1] }}{% else %}&mdash;{% endif %}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-
 <section aria-labelledby="standings">
   <h2 id="standings" class="section-title">Standings</h2>
   <table class="table">
-    <thead><tr><th>Player</th><th class="n">Record</th><th class="n">Win %</th></tr></thead>
+    <thead><tr><th>Player</th><th class="n">Record</th><th class="n">Win %</th><th class="n">Geese</th></tr></thead>
     <tbody>
       {% for r in board %}
         <tr>
           <td class="font-medium">{{ r.display_name }}</td>
           <td class="n">{{ record(r.wins, r.losses, r.pushes) }}</td>
           <td class="n text-muted">{{ '%.1f'|format(r.win_pct or 0) }}</td>
+          <td class="n text-muted">{{ geese.get(r.display_name, 0) }}</td>
         </tr>
       {% endfor %}
     </tbody>

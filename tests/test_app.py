@@ -344,8 +344,12 @@ def test_stats_leads_with_parlays_and_geese(client, db):
     syn, a, b = _two_person_week(db, 2, True, False, "statsy")
     login(client, db, "statsy-a@example.com")
     r = client.get(f"/s/{syn['slug']}/stats")
-    assert "Parlays hit" in r.text and "Goose count" in r.text
-    assert r.text.index("Goose count") < r.text.index("Standings")
+    assert "Parlays hit" in r.text
+    assert "Goose count" not in r.text                      # no separate table
+    head = r.text[r.text.index('id="standings"'):]
+    assert head.index("Win %") < head.index("Geese")        # a column after win %
+    row = head[head.index("statsyB"):head.index("</tr>", head.index("statsyB"))]
+    assert row.rstrip().endswith('<td class="n text-muted">1</td>')
 
 
 def test_results_text_goes_out_once_per_season_and_week(db):
