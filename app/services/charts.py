@@ -58,24 +58,24 @@ def _nice_bounds(lo: float, hi: float) -> tuple[float, float, float]:
     return lo_r, hi_r, step
 
 
-def cumulative_units_chart(
+def running_chart(
     series_data: dict[str, list[dict]],
     *,
     width: int = 760,
     height: int = 320,
 ) -> LineChart:
-    """Running units per player, week by week."""
+    """A running per-player value (wins minus losses), week by week."""
     pad_l, pad_r, pad_t, pad_b = 44, 72, 16, 34
     chart = LineChart(
         width=width, height=height, pad_l=pad_l, pad_r=pad_r, pad_t=pad_t,
         pad_b=pad_b, series=[], x_ticks=[], y_ticks=[], zero_y=None,
-        x_label="Week", y_label="Units",
+        x_label="Week", y_label="Wins minus losses",
     )
     if not series_data:
         return chart
 
     all_weeks = sorted({p["week"] for pts in series_data.values() for p in pts})
-    all_units = [p["units"] for pts in series_data.values() for p in pts]
+    all_units = [p["value"] for pts in series_data.values() for p in pts]
     if not all_weeks or not all_units:
         return chart
     chart.empty = False
@@ -115,7 +115,7 @@ def cumulative_units_chart(
 
     for slot, name in enumerate(sorted(series_data), start=1):
         pts = series_data[name]
-        coords = [(round(sx(p["week"]), 2), round(sy(p["units"]), 2)) for p in pts]
+        coords = [(round(sx(p["week"]), 2), round(sy(p["value"]), 2)) for p in pts]
         s = Series(
             name=name,
             slot=((slot - 1) % 5) + 1,
@@ -125,7 +125,7 @@ def cumulative_units_chart(
         )
         if coords:
             s.end_x, s.end_y = coords[-1]
-            s.end_value = pts[-1]["units"]
+            s.end_value = pts[-1]["value"]
         chart.series.append(s)
 
     # Nudge overlapping end labels apart so direct labelling stays readable.

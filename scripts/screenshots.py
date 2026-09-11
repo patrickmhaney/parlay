@@ -34,6 +34,8 @@ PAGES = [
     ("signin", "/", False),
     ("board-current", f"/s/{SLUG}", True),
     ("board-graded", f"/s/{SLUG}?season=2025&week=16", True),
+    ("board-goose", f"/s/{SLUG}?season=2025&week=13", True),
+    ("board-hit", f"/s/{SLUG}?season=2024&week=3", True),
     ("stats", f"/s/{SLUG}/stats", True),
     ("stats-2025", f"/s/{SLUG}/stats?season=2025", True),
     ("settings", f"/s/{SLUG}/settings", True),

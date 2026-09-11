@@ -37,12 +37,10 @@ def line(v, signed: bool = True) -> str:
     return f"{MINUS}{text}" if d < 0 else f"+{text}"
 
 
-def units(v, places: int = 2) -> str:
-    x = float(v or 0)
-    if abs(x) < 0.005:
-        return f"{0:.{places}f}"
-    s = f"{abs(x):.{places}f}"
-    return f"{MINUS}{s}" if x < 0 else f"+{s}"
+def signed(n) -> str:
+    """3 -> '+3', -2 -> '−2', 0 -> '0'."""
+    n = int(n or 0)
+    return f"+{n}" if n > 0 else (f"{MINUS}{-n}" if n < 0 else "0")
 
 
 def record(w, l, p=0) -> str:
@@ -83,5 +81,5 @@ def daterange(start: datetime | None, end: datetime | None) -> str:
 
 
 def install(env) -> None:
-    env.filters.update(line=line, units=units, kick=kick, day=day)
+    env.filters.update(line=line, signed=signed, kick=kick, day=day)
     env.globals.update(record=record, daterange=daterange)

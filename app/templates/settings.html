@@ -84,10 +84,6 @@
       <label class="field-label" for="name">Name</label>
       <input class="input" id="name" name="name" value="{{ syndicate.name }}" maxlength="60">
     </div>
-    <div>
-      <label class="field-label" for="juice_odds">Juice</label>
-      <input class="input" id="juice_odds" name="juice_odds" type="number" step="5" value="{{ syndicate.juice_odds }}">
-    </div>
     <label class="flex items-center justify-between gap-4 py-1 cursor-pointer">
       <span>Lock picks at kickoff</span>
       <input type="checkbox" name="lock_at_kickoff" value="1" class="switch" {{ 'checked' if syndicate.lock_at_kickoff }}>

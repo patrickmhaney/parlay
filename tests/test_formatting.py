@@ -16,9 +16,8 @@ def test_kickoff_is_shown_in_eastern_not_utc():
     assert f.kick(datetime(2026, 9, 11, 0, 15)) == "Thu 8:15 PM"
 
 
-def test_units_and_record():
-    assert f.units(-11.91) == "\u221211.91"
-    assert f.units(2.3636) == "+2.36"
+def test_signed_and_record():
+    assert f.signed(3) == "+3" and f.signed(-2) == "\u22122" and f.signed(0) == "0"
     assert f.record(10, 7) == "10\u20137"
     assert f.record(10, 7, 1) == "10\u20137\u20131"
 

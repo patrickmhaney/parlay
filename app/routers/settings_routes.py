@@ -105,8 +105,7 @@ def update_me_route(
 
 @router.post("/s/{slug}/syndicate", name="update_syndicate_route")
 def update_syndicate_route(
-    request: Request, slug: str, name: str = Form(""),
-    juice_odds: int = Form(-110), lock_at_kickoff: str = Form(""),
+    request: Request, slug: str, name: str = Form(""), lock_at_kickoff: str = Form(""),
 ):
     user, syn = require_syndicate(request, slug)
     db = get_db()
@@ -115,14 +114,9 @@ def update_syndicate_route(
                       _settings_context(request, syn, user,
                                         error="Only the owner can change this."),
                       status_code=403)
-    if juice_odds == 0 or -100 < juice_odds < 100:
-        return render(request, "settings.html",
-                      _settings_context(request, syn, user,
-                                        error="Enter juice as American odds, like -110."),
-                      status_code=400)
     users_repo.update_syndicate(
         db, syn["id"], name=name.strip() or syn["name"],
-        juice_odds=juice_odds, lock_at_kickoff=bool(lock_at_kickoff),
+        lock_at_kickoff=bool(lock_at_kickoff),
     )
     syn = users_repo.get_syndicate(db, syn["id"])
     return redirect(f"/s/{syn['slug']}/settings?saved=syndicate")

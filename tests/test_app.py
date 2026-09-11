@@ -277,7 +277,7 @@ def test_clicking_your_name_no_longer_signs_you_out(client, db, people):
 def test_no_feature_copy_or_emoji_on_any_page(client, db, people):
     """The old UI explained itself on every screen. Keep it from creeping back."""
     banned = ["pre-filled", "DraftKings", "via ESPN", "Be first", "The text goes out",
-              "Half-point", "No password", "\U0001F3C8", "&#127944;"]
+              "Half-point", "No password", "\U0001F3C8", "&#127944;", "Units", "Juice"]
     slug = people["syndicate"]["slug"]
     pages = [client.get("/").text]
     login(client, db, "owner@example.com")
@@ -297,3 +297,68 @@ def test_stats_empty_state_for_a_new_syndicate(client, db):
     assert r.status_code == 200
     assert "No graded picks yet." in r.text
     assert "Standings" not in r.text
+
+
+# --- the parlay -------------------------------------------------------------
+
+def _two_person_week(db, week, owner_side_wins: bool, friend_side_wins: bool, name):
+    """A fresh syndicate of two, both picking week `week`, graded."""
+    from app.repositories import picks as picks_repo
+    from app.repositories import users as users_repo
+    from app.services.picks_service import grade_pending
+    a = users_repo.get_or_create_user(db, f"{name}-a@example.com", f"{name}A")
+    b = users_repo.get_or_create_user(db, f"{name}-b@example.com", f"{name}B")
+    syn = users_repo.create_syndicate(db, f"{name} syndicate", a["id"])
+    users_repo.add_member(db, syn["id"], b["id"])
+    # home wins 27-20, so HOME -3.5 covers and AWAY +3.5 doesn't
+    for user, wins in ((a, owner_side_wins), (b, friend_side_wins)):
+        picks_repo.upsert_pick(db, syndicate_id=syn["id"], user_id=user["id"],
+                               game_id=game_id(week), season=SEASON, week=week,
+                               bet_type="SPREAD", line="-3.5" if wins else "3.5",
+                               side_team_id=HOME if wins else AWAY)
+    db.execute("""UPDATE games SET home_score = 27, away_score = 20, completed = TRUE,
+                  status = 'STATUS_FINAL' WHERE id = ?""", [game_id(week)])
+    grade_pending(db, syn["id"])
+    return syn, a, b
+
+
+def test_board_calls_out_the_goose(client, db):
+    syn, a, b = _two_person_week(db, 2, True, False, "goosey")
+    login(client, db, "goosey-a@example.com")
+    r = client.get(f"/s/{syn['slug']}", params={"week": 2})
+    assert 'data-parlay="MISSED"' in r.text
+    assert "gooseyB is the goose" in r.text
+    assert r.text.count("data-goose") == 1
+
+
+def test_board_celebrates_a_hit(client, db):
+    syn, a, b = _two_person_week(db, 2, True, True, "hitters")
+    login(client, db, "hitters-a@example.com")
+    r = client.get(f"/s/{syn['slug']}", params={"week": 2})
+    assert 'data-parlay="HIT"' in r.text
+    assert "Parlay hit" in r.text
+    assert "data-goose" not in r.text
+
+
+def test_stats_leads_with_parlays_and_geese(client, db):
+    syn, a, b = _two_person_week(db, 2, True, False, "statsy")
+    login(client, db, "statsy-a@example.com")
+    r = client.get(f"/s/{syn['slug']}/stats")
+    assert "Parlays hit" in r.text and "Goose count" in r.text
+    assert r.text.index("Goose count") < r.text.index("Standings")
+
+
+def test_results_text_goes_out_once_per_season_and_week(db):
+    from app.config import get_settings
+    from app.services import scheduler
+    syn, a, b = _two_person_week(db, 2, True, False, "texty")
+    db.execute("UPDATE users SET phone = '5550000000' WHERE id = ?", [a["id"]])
+    count = lambda: db.value(
+        "SELECT COUNT(*) FROM notifications WHERE syndicate_id = ? AND kind = 'results'", [syn["id"]])
+    scheduler._send_results(db, get_settings())
+    assert count() == 1
+    body = db.value("SELECT body FROM notifications WHERE syndicate_id = ? AND kind = 'results'", [syn["id"]])
+    assert body.startswith("Week 2: parlay missed. textyB is the goose.")
+    scheduler._send_results(db, get_settings())
+    assert count() == 1                                     # not again
+    assert db.value("SELECT COUNT(*) FROM results_sent WHERE syndicate_id = ?", [syn["id"]]) == 1

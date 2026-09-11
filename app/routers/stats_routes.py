@@ -1,4 +1,4 @@
-"""The stats page."""
+"""The stats page: the parlay first, then the legs."""
 from __future__ import annotations
 
 import json
@@ -9,28 +9,26 @@ from markupsafe import Markup
 from app.config import get_settings
 from app.db import get_db
 from app.deps import render, require_syndicate
-from app.formatting import line as fmt_line
+from app.formatting import line as fmt_line, signed
 from app.repositories import picks as picks_repo
 from app.repositories import stats as stats_repo
-from app.services.charts import cumulative_units_chart
+from app.services.charts import running_chart
 
 router = APIRouter()
 
 
 def _chart_payload(chart) -> Markup:
-    """Week-indexed values for the hover readout, as a JSON script tag."""
     by_x: dict[float, dict] = {}
     for s in chart.series:
         for (x, _y), raw in zip(s.points, s.raw):
             slot = by_x.setdefault(x, {"x": x, "week": raw["week"], "parts": []})
-            slot["parts"].append(f"{s.name} {raw['units']:+.1f}".replace("-", "−"))
+            slot["parts"].append(f"{s.name} {signed(raw['value'])}")
     weeks = [{"x": v["x"], "week": v["week"], "label": "   ".join(v["parts"])}
              for v in sorted(by_x.values(), key=lambda d: d["x"])]
     return Markup(f'<script id="chart-data" type="application/json">{json.dumps({"weeks": weeks})}</script>')
 
 
 def _pivot(rows: list[dict], key: str, columns: list[str], order: list[str]) -> list[dict]:
-    """[{display_name, key, wins, ...}] -> one row per player with a cell per column."""
     table: dict[str, dict] = {}
     for r in rows:
         table.setdefault(r["display_name"], {})[r[key]] = r
@@ -48,14 +46,14 @@ def _beat_label(b: dict) -> str:
 def stats_page(request: Request, slug: str, season: int | None = None):
     user, syn = require_syndicate(request, slug)
     db = get_db()
-    juice = syn["juice_odds"]
     sid = syn["id"]
 
     seasons = picks_repo.seasons_with_picks(db, sid)
     chart_season = season or (seasons[0] if seasons else get_settings().current_season)
-    chart = cumulative_units_chart(stats_repo.cumulative_units(db, sid, chart_season, juice))
+    chart = running_chart(stats_repo.running_record(db, sid, chart_season))
 
-    board = stats_repo.leaderboard(db, sid, season, juice)
+    weeks = stats_repo.parlay_weeks(db, sid, season)
+    board = stats_repo.leaderboard(db, sid, season)
     order = [r["display_name"] for r in board]
 
     beats = stats_repo.bad_beats(db, sid, 8)
@@ -68,16 +66,17 @@ def stats_page(request: Request, slug: str, season: int | None = None):
         "season": season,
         "seasons": seasons,
         "chart_season": chart_season,
-        "totals": stats_repo.syndicate_totals(db, sid, season, juice),
+        "parlays": stats_repo.parlay_summary(weeks),
+        "geese": stats_repo.goose_counts(db, sid, weeks),
+        "totals": stats_repo.syndicate_totals(db, sid, season),
         "board": board,
-        "streaks": sorted(stats_repo.streaks(db, sid), key=lambda r: order.index(r["display_name"])
-                          if r["display_name"] in order else 99),
-        "bet_types": _pivot(stats_repo.by_bet_type(db, sid, season, juice), "bet_type",
+        "streaks": sorted(stats_repo.streaks(db, sid),
+                          key=lambda r: order.index(r["display_name"]) if r["display_name"] in order else 99),
+        "bet_types": _pivot(stats_repo.by_bet_type(db, sid, season), "bet_type",
                             ["SPREAD", "OVER", "UNDER"], order),
-        "fav_dog": _pivot(stats_repo.favorite_vs_dog(db, sid, season, juice), "side",
+        "fav_dog": _pivot(stats_repo.favorite_vs_dog(db, sid, season), "side",
                           ["favorite", "underdog"], order),
-        "winners": stats_repo.weekly_winners(db, sid, season),
-        "teams": stats_repo.team_loyalty(db, sid, 10, juice),
+        "teams": stats_repo.team_loyalty(db, sid, 10),
         "beats": beats,
         "chart": chart,
         "chart_json": _chart_payload(chart) if not chart.empty else "",

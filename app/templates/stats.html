@@ -1,13 +1,8 @@
 {% extends "layout.html" %}
 {% block title %}Stats · Parlay{% endblock %}
 
-{% macro u(v) -%}
-  <span class="{{ 'pos' if v and v > 0 else 'neg' if v and v < 0 else 'text-muted' }}">{{ v|units }}</span>
-{%- endmacro %}
-
 {% macro cell(c) -%}
-  {% if c %}{{ record(c.wins, c.losses, c.pushes) }}<span class="block text-xs">{{ u(c.units) }}</span>
-  {% else %}<span class="text-muted">&mdash;</span>{% endif %}
+  {% if c %}{{ record(c.wins, c.losses, c.pushes) }}{% else %}<span class="text-muted">&mdash;</span>{% endif %}
 {%- endmacro %}
 
 {% block content %}
@@ -24,27 +19,59 @@
 </nav>
 
 <dl class="flex gap-8 sm:gap-12 mb-10 whitespace-nowrap">
-  <div><dt class="text-sm text-muted">Record</dt>
+  <div><dt class="text-sm text-muted">Parlays hit</dt>
+       <dd class="text-lg font-semibold"><span class="{{ 'pos' if parlays.hits }}">{{ parlays.hits|length }}</span>
+         <span class="text-muted font-normal">of {{ parlays.settled }}</span></dd></div>
+  <div><dt class="text-sm text-muted">Geese</dt>
+       <dd class="text-lg font-semibold">{{ parlays.geese }}</dd></div>
+  <div><dt class="text-sm text-muted">Legs</dt>
        <dd class="text-lg font-semibold">{{ record(totals.wins, totals.losses, totals.pushes) }}</dd></div>
-  <div><dt class="text-sm text-muted">Units</dt>
-       <dd class="text-lg font-semibold">{{ u(totals.units) }}</dd></div>
-  <div><dt class="text-sm text-muted">Picks</dt>
-       <dd class="text-lg font-semibold">{{ totals.graded or 0 }}</dd></div>
 </dl>
 
 <div class="space-y-12">
 
+<section aria-labelledby="hits">
+  <h2 id="hits" class="section-title">Parlays hit</h2>
+  {% if parlays.hits %}
+    <ul class="rows">
+      {% for w in parlays.hits %}
+        <li class="flex items-center justify-between py-3">
+          <span class="font-medium">{{ w.season }} · Week {{ w.week }}</span>
+          <span class="pos font-medium">{{ w.result.won }} for {{ w.result.won + w.result.pushed }}{% if w.result.pushed %} + push{% endif %}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted">None yet.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="goose">
+  <h2 id="goose" class="section-title">Goose count</h2>
+  <table class="table">
+    <thead><tr><th>Player</th><th class="n">Geese</th><th class="n">Last</th></tr></thead>
+    <tbody>
+      {% for g in geese %}
+        <tr>
+          <td class="font-medium">{{ g.display_name }}</td>
+          <td class="n {{ 'neg font-semibold' if g.count == geese[0].count and g.count }}">{{ g.count }}</td>
+          <td class="n text-muted">{% if g.last %}{{ g.last[0] }} · Wk {{ g.last[1] }}{% else %}&mdash;{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
 <section aria-labelledby="standings">
   <h2 id="standings" class="section-title">Standings</h2>
   <table class="table">
-    <thead><tr><th>Player</th><th class="n">Record</th><th class="n">Win %</th><th class="n">Units</th></tr></thead>
+    <thead><tr><th>Player</th><th class="n">Record</th><th class="n">Win %</th></tr></thead>
     <tbody>
       {% for r in board %}
         <tr>
           <td class="font-medium">{{ r.display_name }}</td>
           <td class="n">{{ record(r.wins, r.losses, r.pushes) }}</td>
           <td class="n text-muted">{{ '%.1f'|format(r.win_pct or 0) }}</td>
-          <td class="n">{{ u(r.units) }}</td>
         </tr>
       {% endfor %}
     </tbody>
@@ -52,15 +79,15 @@
 </section>
 
 {% if chart and not chart.empty %}
-<section aria-labelledby="units-title">
+<section aria-labelledby="record-title">
   <div class="flex items-baseline justify-between mb-3">
-    <h2 id="units-title" class="section-title mb-0">Units</h2>
+    <h2 id="record-title" class="section-title mb-0">Wins minus losses</h2>
     <span class="text-sm text-muted">{{ chart_season }}</span>
   </div>
   <div class="overflow-x-auto -mx-5 px-5">
-    <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" width="100%" id="units-chart"
+    <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" width="100%" id="record-chart"
          style="min-width: 560px; overflow: visible; font-family: Geist, system-ui, sans-serif"
-         role="img" aria-label="Running units by player through the {{ chart_season }} season. Final totals are in the standings table.">
+         role="img" aria-label="Each player's wins minus losses through the {{ chart_season }} season. Records are in the standings table.">
       {% for t in chart.y_ticks %}
         <line x1="{{ chart.pad_l }}" x2="{{ chart.width - chart.pad_r }}" y1="{{ t.y }}" y2="{{ t.y }}"
               stroke="var(--line)" stroke-width="1"/>
@@ -149,20 +176,7 @@
   </table>
 </section>
 
-{% if winners %}
-<section aria-labelledby="weekly">
-  <h2 id="weekly" class="section-title">Weekly wins</h2>
-  <table class="table">
-    <thead><tr><th>Player</th><th class="n">Only winner</th><th class="n">Shared</th></tr></thead>
-    <tbody>
-      {% for r in winners %}
-        <tr><td class="font-medium">{{ r.display_name }}</td>
-            <td class="n">{{ r.solo }}</td><td class="n text-muted">{{ r.shared }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-{% endif %}
+
 
 {% if teams %}
 <section aria-labelledby="teams">
@@ -206,7 +220,7 @@
 {% block scripts %}
 <script>
 (function () {
-  var svg = document.getElementById('units-chart');
+  var svg = document.getElementById('record-chart');
   var payload = document.getElementById('chart-data');
   if (!svg || !payload) return;
   var weeks = JSON.parse(payload.textContent).weeks;

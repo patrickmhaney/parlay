@@ -12,7 +12,6 @@ from app.services.grading import (
     describe,
     format_line,
     grade,
-    units_for,
 )
 
 HOME, AWAY = "home1", "away1"
@@ -125,24 +124,6 @@ def test_ungraded_without_scores():
 def test_unknown_bet_type():
     with pytest.raises(GradingError):
         g("PARLAY", "1", 10, 10)
-
-
-# --- units -----------------------------------------------------------------
-
-def test_units_at_standard_juice():
-    assert units_for(WIN, -110) == Decimal(100) / Decimal(110)
-    assert units_for(LOSS, -110) == Decimal("-1")
-    assert units_for(PUSH, -110) == Decimal("0")
-
-
-def test_units_at_plus_money():
-    assert units_for(WIN, +150) == Decimal("1.5")
-
-
-def test_a_week_of_one_and_four_is_net_negative():
-    # 1-4 at -110 is the shape of a bad week; it must not round to break-even.
-    net = units_for(WIN) + 4 * units_for(LOSS)
-    assert net < Decimal("-3")
 
 
 # --- formatting ------------------------------------------------------------

@@ -136,8 +136,17 @@ def picks_are_in_message(picks: list[dict], base_url: str) -> str:
     return "\n".join(lines)
 
 
-def results_message(week: int, rows: list[dict], base_url: str) -> str:
-    lines = [f"Week {week} results:"]
+def results_message(week: int, rows: list[dict], base_url: str, parlay=None) -> str:
+    """Leads with the parlay -- that's the bet that matters -- then each leg."""
+    if parlay is not None and parlay.status == "HIT":
+        head = f"Week {week}: THE PARLAY HIT!"
+    elif parlay is not None and parlay.goose:
+        head = f"Week {week}: parlay missed. {parlay.goose} is the goose."
+    elif parlay is not None and parlay.status == "MISSED":
+        head = f"Week {week}: parlay missed ({parlay.won} of {parlay.legs} won)."
+    else:
+        head = f"Week {week} results:"
+    lines = [head]
     for r in rows:
         mark = {"WIN": "W", "LOSS": "L", "PUSH": "P"}.get(r["outcome"], "?")
         lines.append(f"-{r['display_name']}: {mark}  {r['summary']}")

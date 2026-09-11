@@ -22,6 +22,26 @@
   </section>
   {% endif %}
 
+  {% if parlay and parlay.status != 'PENDING' %}
+  <section aria-label="Parlay" data-parlay="{{ parlay.status }}">
+    {% if parlay.status == 'HIT' %}
+      <p class="text-xl font-semibold pos">Parlay hit</p>
+      <p class="text-muted mt-1">{{ parlay.won }} for {{ parlay.won }}{% if parlay.pushed %}, {{ parlay.pushed }} push{% endif %}</p>
+    {% elif parlay.status == 'MISSED' %}
+      <p class="text-xl font-semibold">Parlay missed</p>
+      <p class="text-muted mt-1">
+        {% if parlay.goose %}<span class="neg font-medium">{{ parlay.goose }} is the goose</span> · {% endif %}{{ parlay.won }} of {{ parlay.legs }} won
+      </p>
+    {% elif parlay.status == 'LIVE' %}
+      <p class="text-xl font-semibold">Parlay alive</p>
+      <p class="text-muted mt-1">{{ parlay.won }} of {{ parlay.legs }} won · {{ parlay.pending }} to go</p>
+    {% elif parlay.status == 'VOID' %}
+      <p class="text-xl font-semibold">Parlay void</p>
+      <p class="text-muted mt-1">Every leg pushed</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
   <section aria-labelledby="picks" data-state="{{ 'locked' if locked else 'open' }}">
     <div class="flex items-baseline justify-between mb-1">
       <h2 id="picks" class="section-title mb-0">Picks</h2>
@@ -30,7 +50,10 @@
     <ul class="rows">
       {% for p in picks %}
         <li class="flex items-start gap-3 py-3" data-outcome="{{ p.outcome or '' }}">
-          <span class="w-16 shrink-0 font-medium truncate">{{ p.display_name }}</span>
+          <span class="w-16 shrink-0">
+            <span class="block font-medium truncate">{{ p.display_name }}</span>
+            {% if parlay and parlay.goose == p.display_name %}<span class="block text-xs neg font-medium" data-goose>Goose</span>{% endif %}
+          </span>
           <div class="min-w-0 flex-1">
             <div class="truncate">{{ p.label }}</div>
             <div class="text-sm text-muted truncate">

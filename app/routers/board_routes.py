@@ -104,6 +104,7 @@ def _board_context(syn: dict, user: dict, season: int, week: int, *,
             sel_line = _suggested_line(sel_game, sel_bet_type, sel_side) if sel_game else ""
 
     kickoffs = [g["kickoff_at"] for g in games if g.get("kickoff_at")]
+    parlay = stats_repo.week_parlay(db, syn["id"], season, week) if picks else None
 
     return {
         "syndicate": syn, "season": season, "week": week,
@@ -116,6 +117,7 @@ def _board_context(syn: dict, user: dict, season: int, week: int, *,
         "editing": editing and my_pick is not None,
         "week_start": min(kickoffs) if kickoffs else None,
         "week_end": max(kickoffs) if kickoffs else None,
+        "parlay": parlay,
         "error": error, "active_nav": "board",
     }
 
@@ -131,8 +133,7 @@ def board(request: Request, slug: str, week: int | None = None, season: int | No
     weeks = [r["week"] for r in db.rows(
         "SELECT DISTINCT week FROM games WHERE season = ? ORDER BY week", [season])] or [1]
     ctx["all_weeks"] = weeks
-    ctx["standings"] = [r for r in stats_repo.leaderboard(db, syn["id"], season, syn["juice_odds"])
-                        if r["graded"]]
+    ctx["standings"] = [r for r in stats_repo.leaderboard(db, syn["id"], season) if r["graded"]]
     return render(request, "board.html", ctx)
 
 

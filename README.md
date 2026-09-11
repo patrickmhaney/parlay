@@ -1,8 +1,9 @@
 # Parlay Syndicate
 
-Weekly NFL pick pool. Everyone takes one bet a week — a spread or a total —
-the board locks when everyone's in, and the app grades the picks itself from
-the final scores.
+Weekly NFL parlay. Each member picks one leg — a spread or a total — and
+the group bets them together as a single parlay: it hits only if no leg
+loses. The board locks when everyone's in, the app grades every leg from the
+final scores, and whoever's loss sank an otherwise-winning parlay is the goose.
 
 Rebuilt from the 2023 FastAPI original. The plan behind the rebuild is in
 [REBUILD_PLAN.md](REBUILD_PLAN.md).

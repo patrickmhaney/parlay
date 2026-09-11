@@ -99,27 +99,6 @@ def grade(
     return GradeResult(_outcome(margin), margin)
 
 
-# --- units -----------------------------------------------------------------
-
-
-def units_for(outcome: str, odds: int = -110) -> Decimal:
-    """Units won or lost on a 1-unit stake at American odds.
-
-    A win at -110 returns 100/110 of a unit; a loss costs the full unit; a push
-    returns the stake and is worth nothing either way.
-    """
-    if outcome == PUSH:
-        return Decimal("0")
-    if outcome == LOSS:
-        return Decimal("-1")
-    if outcome != WIN:
-        raise GradingError(f"unknown outcome {outcome!r}")
-    d = Decimal(abs(int(odds)))
-    if odds < 0:
-        return Decimal(100) / d
-    return d / Decimal(100)
-
-
 # --- description helpers ---------------------------------------------------
 
 

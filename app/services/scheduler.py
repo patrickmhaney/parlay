@@ -13,6 +13,7 @@ from apscheduler.triggers.cron import CronTrigger
 from app.config import get_settings
 from app.db import get_db
 from app.repositories import picks as picks_repo
+from app.repositories import stats as stats_repo
 from app.repositories import users as users_repo
 from app.services import notify, sync
 from app.services.espn import EspnClient
@@ -53,12 +54,10 @@ def _send_results(db, settings) -> None:
     for syn in db.rows("SELECT * FROM syndicates"):
         row = db.row(
             """SELECT p.season, p.week
-               FROM picks p JOIN pick_results r ON r.pick_id = p.id
+               FROM picks p LEFT JOIN pick_results r ON r.pick_id = p.id
                WHERE p.syndicate_id = ?
                GROUP BY p.season, p.week
-               HAVING COUNT(*) = (SELECT COUNT(*) FROM picks p2
-                                  WHERE p2.syndicate_id = p.syndicate_id
-                                    AND p2.season = p.season AND p2.week = p.week)
+               HAVING COUNT(r.pick_id) = COUNT(*)      -- every pick graded
                ORDER BY p.season DESC, p.week DESC LIMIT 1""",
             [syn["id"]],
         )
@@ -69,13 +68,10 @@ def _send_results(db, settings) -> None:
         if lock and lock.get("notified_at") is None:
             continue  # the "picks are in" text hasn't even gone out
 
-        already = db.value(
-            """SELECT 1 FROM notifications
-               WHERE syndicate_id = ? AND kind = 'results'
-                 AND body LIKE ? AND status = 'sent' LIMIT 1""",
-            [syn["id"], f"Week {week} results:%"],
-        )
-        if already:
+        if db.value(
+            "SELECT 1 FROM results_sent WHERE syndicate_id = ? AND season = ? AND week = ?",
+            [syn["id"], season, week],
+        ):
             continue
 
         picks = picks_repo.picks_for_week(db, syn["id"], season, week)
@@ -83,10 +79,15 @@ def _send_results(db, settings) -> None:
                  "summary": pick_summary(p)} for p in picks if p["outcome"]]
         if not rows:
             continue
-        message = notify.results_message(week, rows, settings.base_url)
+        parlay = stats_repo.week_parlay(db, syn["id"], season, week)
+        message = notify.results_message(week, rows, settings.base_url, parlay)
         for m in users_repo.members(db, syn["id"]):
             if m.get("phone"):
                 notify.send_sms(db, m["phone"], message, "results", syn["id"])
+        db.execute(
+            "INSERT INTO results_sent VALUES (?, ?, ?, now()::TIMESTAMP) ON CONFLICT DO NOTHING",
+            [syn["id"], season, week],
+        )
 
 
 def cleanup_job() -> None:
