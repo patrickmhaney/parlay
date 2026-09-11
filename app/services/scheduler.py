@@ -24,29 +24,32 @@ _scheduler: BackgroundScheduler | None = None
 
 
 def sync_job() -> None:
-    """Refresh schedule/odds/scores for weeks that aren't finished."""
+    """Hourly: refresh lines and scores for unfinished weeks, then grade any
+    pick whose game has gone final -- so a Thursday result shows on Thursday
+    night, not the next morning. Never sends texts."""
     settings = get_settings()
     db = get_db()
     client = EspnClient(settings.espn_cache_dir)
     try:
         n = sync.sync_live_weeks(db, client, settings.current_season)
-        log.info("scheduled sync refreshed %s games", n)
+        graded = grade_pending(db)
+        log.info("sync refreshed %s games, graded %s picks", n, graded["graded"])
     except Exception:
         log.exception("scheduled sync failed")
 
 
 def grade_job() -> None:
-    """Grade everything gradable, then text each syndicate its week's results."""
+    """Morning: sync and grade, then send each syndicate its results text for
+    the latest week that's fully graded and not yet sent. The send is gated
+    on results_sent, not on whether this run graded anything -- the hourly
+    job usually got there first."""
     settings = get_settings()
     db = get_db()
+    sync_job()
     try:
-        sync_job()
-        result = grade_pending(db)
-        log.info("scheduled grading: %s", result)
-        if result["graded"]:
-            _send_results(db, settings)
+        _send_results(db, settings)
     except Exception:
-        log.exception("scheduled grading failed")
+        log.exception("sending results failed")
 
 
 def _send_results(db, settings) -> None:

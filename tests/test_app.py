@@ -366,3 +366,26 @@ def test_results_text_goes_out_once_per_season_and_week(db):
     scheduler._send_results(db, get_settings())
     assert count() == 1                                     # not again
     assert db.value("SELECT COUNT(*) FROM results_sent WHERE syndicate_id = ?", [syn["id"]]) == 1
+
+
+def test_signing_in_without_a_syndicate_does_not_loop(client, db):
+    from app.services import auth
+    link = auth.issue_login_link(db, "loner@example.com", None)
+    r = client.get("/auth/verify", params={"token": link.split("token=")[1]}, follow_redirects=False)
+    assert r.headers["location"] == "/start"
+    r = client.get("/start")
+    assert r.status_code == 200 and 'action="/start"' in r.text
+    assert client.get("/login", follow_redirects=False).headers["location"] == "/start"
+    r = client.post("/start", data={"name": "Loner League"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].endswith("/settings")
+    assert client.get("/", follow_redirects=False).headers["location"].startswith("/s/loner-league")
+
+
+def test_results_text_still_sends_when_the_hourly_job_already_graded(db, monkeypatch):
+    """Regression: the morning job used to send only if *it* graded something."""
+    from app.services import scheduler
+    syn, a, b = _two_person_week(db, 3, True, True, "hourly")   # graded already
+    db.execute("UPDATE users SET phone = '5550000001' WHERE id = ?", [a["id"]])
+    monkeypatch.setattr(scheduler.sync, "sync_live_weeks", lambda *a, **k: 0)   # no network
+    scheduler.grade_job()
+    assert db.value("SELECT COUNT(*) FROM results_sent WHERE syndicate_id = ?", [syn["id"]]) == 1

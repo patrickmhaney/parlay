@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}New syndicate · Parlay{% endblock %}
+{% block content %}
+<div class="max-w-xs mx-auto pt-16 sm:pt-24">
+  <h1 class="text-xl font-semibold mb-8">New syndicate</h1>
+  <form method="post" action="/start" class="space-y-4">
+    <div>
+      <label class="field-label" for="name">Name</label>
+      <input class="input" id="name" name="name" maxlength="60" required autofocus>
+    </div>
+    <button class="btn btn-primary w-full">Create</button>
+  </form>
+  <form method="post" action="/logout" class="mt-8 text-center">
+    <p class="text-sm text-muted">{{ user.email }}</p>
+    <button class="link mt-1">Sign out</button>
+  </form>
+</div>
+{% endblock %}

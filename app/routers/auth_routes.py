@@ -21,7 +21,7 @@ LOGIN_LINKS_PER_WINDOW = 3  # per address, per 15 minutes
 
 def _home_for(db, user: dict) -> str:
     syns = users_repo.syndicates_for_user(db, user["id"])
-    return f"/s/{syns[0]['slug']}" if syns else "/login?new=1"
+    return f"/s/{syns[0]['slug']}" if syns else "/start"
 
 
 @router.get("/")
@@ -116,6 +116,23 @@ def logout(request: Request):
     response = redirect("/")
     auth.clear_session_cookie(response)
     return response
+
+
+@router.get("/start")
+def start_page(request: Request):
+    """Signed in, but not in any syndicate yet: create one (or sign out and
+    use the address you were invited with)."""
+    user = require_user(request)
+    if users_repo.syndicates_for_user(get_db(), user["id"]):
+        return redirect(_home_for(get_db(), user))
+    return render(request, "start.html")
+
+
+@router.post("/start")
+def start_submit(request: Request, name: str = Form(...)):
+    user = require_user(request)
+    syn = users_repo.create_syndicate(get_db(), name.strip()[:60] or f"{user['display_name']}'s syndicate", user["id"])
+    return redirect(f"/s/{syn['slug']}/settings")
 
 
 @router.get("/new-syndicate")
