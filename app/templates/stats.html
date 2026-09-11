@@ -1,0 +1,231 @@
+{% extends "layout.html" %}
+{% block title %}Stats · Parlay{% endblock %}
+
+{% macro u(v) -%}
+  <span class="{{ 'pos' if v and v > 0 else 'neg' if v and v < 0 else 'text-muted' }}">{{ v|units }}</span>
+{%- endmacro %}
+
+{% macro cell(c) -%}
+  {% if c %}{{ record(c.wins, c.losses, c.pushes) }}<span class="block text-xs">{{ u(c.units) }}</span>
+  {% else %}<span class="text-muted">&mdash;</span>{% endif %}
+{%- endmacro %}
+
+{% block content %}
+<h1 class="text-xl font-semibold mb-6">Stats</h1>
+
+{% if not totals.graded and not season %}
+  <p class="text-muted">No graded picks yet.</p>
+{% else %}
+<nav class="seg mb-8 max-w-md" aria-label="Season">
+  <a href="{{ url_for('stats_page', slug=syndicate.slug) }}" class="{{ 'on' if not season }}">All time</a>
+  {% for s in seasons %}
+    <a href="{{ url_for('stats_page', slug=syndicate.slug) }}?season={{ s }}" class="{{ 'on' if season == s }}">{{ s }}</a>
+  {% endfor %}
+</nav>
+
+<dl class="flex gap-8 sm:gap-12 mb-10 whitespace-nowrap">
+  <div><dt class="text-sm text-muted">Record</dt>
+       <dd class="text-lg font-semibold">{{ record(totals.wins, totals.losses, totals.pushes) }}</dd></div>
+  <div><dt class="text-sm text-muted">Units</dt>
+       <dd class="text-lg font-semibold">{{ u(totals.units) }}</dd></div>
+  <div><dt class="text-sm text-muted">Picks</dt>
+       <dd class="text-lg font-semibold">{{ totals.graded or 0 }}</dd></div>
+</dl>
+
+<div class="space-y-12">
+
+<section aria-labelledby="standings">
+  <h2 id="standings" class="section-title">Standings</h2>
+  <table class="table">
+    <thead><tr><th>Player</th><th class="n">Record</th><th class="n">Win %</th><th class="n">Units</th></tr></thead>
+    <tbody>
+      {% for r in board %}
+        <tr>
+          <td class="font-medium">{{ r.display_name }}</td>
+          <td class="n">{{ record(r.wins, r.losses, r.pushes) }}</td>
+          <td class="n text-muted">{{ '%.1f'|format(r.win_pct or 0) }}</td>
+          <td class="n">{{ u(r.units) }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% if chart and not chart.empty %}
+<section aria-labelledby="units-title">
+  <div class="flex items-baseline justify-between mb-3">
+    <h2 id="units-title" class="section-title mb-0">Units</h2>
+    <span class="text-sm text-muted">{{ chart_season }}</span>
+  </div>
+  <div class="overflow-x-auto -mx-5 px-5">
+    <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" width="100%" id="units-chart"
+         style="min-width: 560px; overflow: visible; font-family: Geist, system-ui, sans-serif"
+         role="img" aria-label="Running units by player through the {{ chart_season }} season. Final totals are in the standings table.">
+      {% for t in chart.y_ticks %}
+        <line x1="{{ chart.pad_l }}" x2="{{ chart.width - chart.pad_r }}" y1="{{ t.y }}" y2="{{ t.y }}"
+              stroke="var(--line)" stroke-width="1"/>
+        <text x="{{ chart.pad_l - 10 }}" y="{{ t.y + 4 }}" text-anchor="end" font-size="11"
+              fill="var(--muted)">{{ t.label|replace('-', '−') }}</text>
+      {% endfor %}
+      {% if chart.zero_y is not none %}
+        <line x1="{{ chart.pad_l }}" x2="{{ chart.width - chart.pad_r }}" y1="{{ chart.zero_y }}" y2="{{ chart.zero_y }}"
+              stroke="var(--muted)" stroke-width="1" opacity=".5"/>
+      {% endif %}
+      {% for t in chart.x_ticks %}
+        <text x="{{ t.x }}" y="{{ chart.height - chart.pad_b + 18 }}" text-anchor="middle"
+              font-size="11" fill="var(--muted)">{{ t.label }}</text>
+      {% endfor %}
+      {% for s in chart.series %}
+        <polyline points="{{ s.polyline }}" fill="none" stroke="var(--bg)" stroke-width="5"
+                  stroke-linejoin="round" stroke-linecap="round"/>
+      {% endfor %}
+      {% for s in chart.series %}
+        <polyline points="{{ s.polyline }}" fill="none" stroke="var(--series-{{ s.slot }})"
+                  stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="{{ s.end_x }}" cy="{{ s.points[-1][1] }}" r="4" fill="var(--series-{{ s.slot }})"
+                stroke="var(--bg)" stroke-width="2"/>
+        <text x="{{ chart.width - chart.pad_r + 12 }}" y="{{ s.end_y + 4 }}" font-size="12"
+              font-weight="500" fill="var(--ink)">{{ s.name }}</text>
+      {% endfor %}
+      <line id="chart-cursor" y1="{{ chart.pad_t }}" y2="{{ chart.height - chart.pad_b }}"
+            stroke="var(--muted)" stroke-width="1" style="display:none" pointer-events="none"/>
+      <rect id="chart-capture" x="{{ chart.pad_l }}" y="{{ chart.pad_t }}"
+            width="{{ chart.width - chart.pad_l - chart.pad_r }}"
+            height="{{ chart.height - chart.pad_t - chart.pad_b }}" fill="transparent"/>
+    </svg>
+  </div>
+  <ul class="flex flex-wrap gap-x-5 gap-y-1 mt-3 text-sm" aria-label="Legend">
+    {% for s in chart.series %}
+      <li class="flex items-center gap-2">
+        <span class="inline-block w-3 h-0.5 rounded-full" style="background: var(--series-{{ s.slot }})" aria-hidden="true"></span>{{ s.name }}
+      </li>
+    {% endfor %}
+  </ul>
+  <p id="chart-tip" class="mt-2 text-sm text-muted min-h-5" aria-live="polite"></p>
+  {{ chart_json }}
+</section>
+{% endif %}
+
+<section aria-labelledby="streaks">
+  <h2 id="streaks" class="section-title">Streaks</h2>
+  <table class="table">
+    <thead><tr><th>Player</th><th class="n">Current</th><th class="n">Best</th><th class="n">Worst</th></tr></thead>
+    <tbody>
+      {% for r in streaks %}
+        <tr>
+          <td class="font-medium">{{ r.display_name }}</td>
+          <td class="n">{% if r.current_kind %}<span class="mark mark-{{ r.current_kind }}">{{ r.current }}{{ r.current_kind[0] }}</span>{% else %}&mdash;{% endif %}</td>
+          <td class="n">{{ r.longest_win }}W</td>
+          <td class="n">{{ r.longest_loss }}L</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="bets">
+  <h2 id="bets" class="section-title">By bet type</h2>
+  <table class="table">
+    <thead><tr><th>Player</th><th class="n">Spread</th><th class="n">Over</th><th class="n">Under</th></tr></thead>
+    <tbody>
+      {% for r in bet_types %}
+        <tr class="align-top"><td class="font-medium">{{ r.name }}</td>
+          {% for c in r.cells %}<td class="n">{{ cell(c) }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="favdog">
+  <h2 id="favdog" class="section-title">Favorites vs underdogs</h2>
+  <table class="table">
+    <thead><tr><th>Player</th><th class="n">Favorite</th><th class="n">Underdog</th></tr></thead>
+    <tbody>
+      {% for r in fav_dog %}
+        <tr class="align-top"><td class="font-medium">{{ r.name }}</td>
+          {% for c in r.cells %}<td class="n">{{ cell(c) }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{% if winners %}
+<section aria-labelledby="weekly">
+  <h2 id="weekly" class="section-title">Weekly wins</h2>
+  <table class="table">
+    <thead><tr><th>Player</th><th class="n">Only winner</th><th class="n">Shared</th></tr></thead>
+    <tbody>
+      {% for r in winners %}
+        <tr><td class="font-medium">{{ r.display_name }}</td>
+            <td class="n">{{ r.solo }}</td><td class="n text-muted">{{ r.shared }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% if teams %}
+<section aria-labelledby="teams">
+  <h2 id="teams" class="section-title">Most-picked teams</h2>
+  <table class="table">
+    <thead><tr><th>Player</th><th>Team</th><th class="n">Picks</th><th class="n">Record</th></tr></thead>
+    <tbody>
+      {% for r in teams %}
+        <tr><td class="font-medium">{{ r.display_name }}</td><td>{{ r.team }}</td>
+            <td class="n">{{ r.n }}</td><td class="n">{{ record(r.wins, r.losses) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% if beats %}
+<section aria-labelledby="close">
+  <h2 id="close" class="section-title">Close losses</h2>
+  <ul class="rows">
+    {% for b in beats %}
+      <li class="flex items-start gap-3 py-3">
+        <span class="w-16 shrink-0 font-medium truncate">{{ b.display_name }}</span>
+        <div class="min-w-0 flex-1">
+          <div class="truncate">{{ b.label }}</div>
+          <div class="text-sm text-muted truncate">
+            {{ b.season }} · Week {{ b.week }} · {{ b.away_abbr }} {{ b.away_score }}&ndash;{{ b.home_score }} {{ b.home_abbr }}
+          </div>
+        </div>
+        <span class="neg">{{ b.margin|line }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var svg = document.getElementById('units-chart');
+  var payload = document.getElementById('chart-data');
+  if (!svg || !payload) return;
+  var weeks = JSON.parse(payload.textContent).weeks;
+  var cursor = document.getElementById('chart-cursor');
+  var tip = document.getElementById('chart-tip');
+  var area = document.getElementById('chart-capture');
+  function show(e) {
+    var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    var x = pt.matrixTransform(svg.getScreenCTM().inverse()).x, best = weeks[0];
+    weeks.forEach(function (w) { if (Math.abs(w.x - x) < Math.abs(best.x - x)) best = w; });
+    cursor.setAttribute('x1', best.x); cursor.setAttribute('x2', best.x);
+    cursor.style.display = '';
+    tip.textContent = 'Week ' + best.week + '   ' + best.label;
+  }
+  function hide() { cursor.style.display = 'none'; tip.textContent = ''; }
+  area.addEventListener('mousemove', show);
+  area.addEventListener('mouseleave', hide);
+  area.addEventListener('touchmove', function (e) { if (e.touches[0]) show(e.touches[0]); }, { passive: true });
+  area.addEventListener('touchend', hide);
+})();
+</script>
+{% endblock %}

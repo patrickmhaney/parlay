@@ -1,0 +1,53 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_PATH: /srv/data/parlay.duckdb
+      ESPN_CACHE_DIR: /srv/data/espn_cache
+    volumes:
+      - ./data:/srv/data
+    expose:
+      - "8080"
+    # NOTE: never set `deploy.replicas` or uvicorn --workers above 1.
+    # DuckDB takes an exclusive file lock; a second writer cannot start.
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  backup:
+    image: alpine:3.20
+    restart: unless-stopped
+    depends_on:
+      - app
+    volumes:
+      - ./data:/data
+      - ./backups:/backups
+    # Nightly snapshot at 03:30, keeping 30 days. Replaces the old app's
+    # copy-the-whole-database-on-every-pick behaviour.
+    command: >
+      sh -c "apk add --no-cache tzdata >/dev/null &&
+             while true; do
+               now=$$(date +%H%M);
+               if [ \"$$now\" = \"0330\" ]; then
+                 cp /data/parlay.duckdb /backups/parlay-$$(date +%Y%m%d).duckdb 2>/dev/null &&
+                 find /backups -name 'parlay-*.duckdb' -mtime +30 -delete;
+                 sleep 90;
+               fi;
+               sleep 30;
+             done"
+
+volumes:
+  caddy_data:
+  caddy_config:

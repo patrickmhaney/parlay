@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'New syndicate' if new else 'Sign in' }} · Parlay{% endblock %}
+{% block content %}
+<div class="max-w-xs mx-auto pt-16 sm:pt-24">
+  <h1 class="text-xl font-semibold mb-8">{{ 'New syndicate' if new else 'Sign in' }}</h1>
+
+  <form method="post" action="/login" class="space-y-4">
+    {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+    {% if new %}<input type="hidden" name="new" value="1">{% endif %}
+    <div>
+      <label class="field-label" for="email">Email</label>
+      <input class="input" id="email" name="email" type="email" required autofocus
+             autocomplete="email" inputmode="email">
+    </div>
+    {% if new %}
+      <div>
+        <label class="field-label" for="syndicate_name">Syndicate name</label>
+        <input class="input" id="syndicate_name" name="syndicate_name" type="text" maxlength="60">
+      </div>
+    {% endif %}
+    {% if error %}<p class="text-sm text-loss" role="alert">{{ error }}</p>{% endif %}
+    <button class="btn btn-primary w-full">Continue</button>
+  </form>
+
+  <p class="mt-8 text-center">
+    {% if new %}<a class="link" href="/login">Sign in instead</a>
+    {% else %}<a class="link" href="/login?new=1">Start a new syndicate</a>{% endif %}
+  </p>
+</div>
+{% endblock %}

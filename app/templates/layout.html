@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}Parlay{% endblock %}</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="{{ url_for('static', path='favicon.svg') }}?v={{ asset_v }}" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/Geist-Variable.woff2?v=1" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}?v={{ asset_v }}">
+  <script src="{{ url_for('static', path='js/htmx.min.js') }}?v={{ asset_v }}" defer></script>
+</head>
+<body class="min-h-screen">
+
+{% set tabs = [] %}
+{% if syndicate %}
+  {% set tabs = [
+    ('board', 'Board', url_for('board', slug=syndicate.slug),
+     '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'),
+    ('stats', 'Stats', url_for('stats_page', slug=syndicate.slug),
+     '<path d="M3 3v18h18"/><path d="M7 16l4-5 3 3 5-6"/>'),
+    ('settings', 'Settings', url_for('settings_page', slug=syndicate.slug),
+     '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>')
+  ] %}
+{% endif %}
+
+<header class="sticky top-0 z-30 bg-bg border-b border-line">
+  <div class="max-w-app mx-auto px-5 h-14 flex items-center">
+    <a href="/" class="text-base font-semibold tracking-tight">Parlay</a>
+    {% if tabs %}
+      <nav class="ml-auto hidden sm:flex items-center gap-6" aria-label="Main">
+        {% for key, text, href, icon in tabs %}
+          <a href="{{ href }}"
+             class="text-sm font-medium transition-colors {{ 'text-ink' if active_nav == key else 'text-muted hover:text-ink' }}"
+             {% if active_nav == key %}aria-current="page"{% endif %}>{{ text }}</a>
+        {% endfor %}
+      </nav>
+    {% endif %}
+  </div>
+</header>
+
+<main class="max-w-app mx-auto px-5 pt-6 {{ 'pb-28 sm:pb-16' if tabs else 'pb-16' }}">
+  {% block content %}{% endblock %}
+</main>
+
+{% if tabs %}
+<nav class="sm:hidden fixed bottom-0 inset-x-0 z-30 bg-bg border-t border-line
+            flex pb-[env(safe-area-inset-bottom)]" aria-label="Main">
+  {% for key, text, href, icon in tabs %}
+    <a href="{{ href }}"
+       class="flex-1 flex flex-col items-center gap-1 pt-2.5 pb-2 text-[11px] font-medium
+              {{ 'text-ink' if active_nav == key else 'text-muted' }}"
+       {% if active_nav == key %}aria-current="page"{% endif %}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{{ icon|safe }}</svg>
+      {{ text }}
+    </a>
+  {% endfor %}
+</nav>
+{% endif %}
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Parlay Syndicate -- installed as /etc/systemd/system/parlay.service
+#
+# Modelled on haneytube.service. Runs straight from the repo so a deploy is
+# `git pull && sudo systemctl restart parlay`.
+
+[Unit]
+Description=Parlay Syndicate
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=patrickmhaney
+WorkingDirectory=/home/patrickmhaney/parlay
+EnvironmentFile=/home/patrickmhaney/parlay/.env
+# ONE worker: DuckDB allows a single writer. Bound to localhost; nginx fronts it.
+# --proxy-headers trusts X-Forwarded-Proto from nginx (127.0.0.1 only).
+ExecStart=/home/patrickmhaney/parlay/.venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 --port 8081 --workers 1 \
+    --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=always
+RestartSec=3
+
+# Reads the repo, writes only its data directory.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/patrickmhaney/parlay/data
+
+[Install]
+WantedBy=multi-user.target

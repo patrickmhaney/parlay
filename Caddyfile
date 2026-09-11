@@ -1,0 +1,23 @@
+# Automatic HTTPS via Let's Encrypt. Point the A record at this box first.
+www.parlaysyndicate.com, parlaysyndicate.com {
+	encode gzip zstd
+	reverse_proxy app:8080
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+	}
+
+	# Static assets are content-addressed by rebuild, so cache them briefly.
+	@static path /static/*
+	header @static Cache-Control "public, max-age=3600"
+
+	log {
+		output file /data/access.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}

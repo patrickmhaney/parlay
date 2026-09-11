@@ -1,0 +1,58 @@
+{# Swapped by HTMX after every change: your pick, then everyone's. #}
+<div id="pick-panel" class="space-y-10">
+
+  {% if can_pick %}
+  <section aria-labelledby="your-pick">
+    <h2 id="your-pick" class="section-title">Your pick</h2>
+    {% if show_form %}
+      {% include "partials/pick_form.html" %}
+    {% elif my_pick %}
+      <div class="flex items-center justify-between gap-4" data-state="picked">
+        <div class="min-w-0">
+          <div class="font-medium truncate">{{ my_pick.label }}</div>
+          <div class="text-sm text-muted truncate">
+            {{ my_pick.away_abbr }} @ {{ my_pick.home_abbr }} · {{ my_pick.kickoff_at|kick }}
+          </div>
+        </div>
+        <button type="button" class="btn btn-plain -mr-4"
+                hx-get="{{ url_for('pick_form_partial', slug=syndicate.slug) }}?week={{ week }}&season={{ season }}&edit=1"
+                hx-target="#pick-panel" hx-swap="outerHTML">Edit</button>
+      </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <section aria-labelledby="picks" data-state="{{ 'locked' if locked else 'open' }}">
+    <div class="flex items-baseline justify-between mb-1">
+      <h2 id="picks" class="section-title mb-0">Picks</h2>
+      <span class="text-sm text-muted">{{ picks|length }} of {{ member_count }}</span>
+    </div>
+    <ul class="rows">
+      {% for p in picks %}
+        <li class="flex items-start gap-3 py-3" data-outcome="{{ p.outcome or '' }}">
+          <span class="w-16 shrink-0 font-medium truncate">{{ p.display_name }}</span>
+          <div class="min-w-0 flex-1">
+            <div class="truncate">{{ p.label }}</div>
+            <div class="text-sm text-muted truncate">
+              {% if p.completed and p.home_score is not none %}
+                {{ p.away_abbr }} {{ p.away_score }}&ndash;{{ p.home_score }} {{ p.home_abbr }} · Final
+              {% else %}
+                {{ p.away_abbr }} @ {{ p.home_abbr }} · {{ p.kickoff_at|kick }}
+              {% endif %}
+            </div>
+          </div>
+          {% if p.outcome %}
+            <span class="mark mark-{{ p.outcome }} w-4 text-right"
+                  title="{{ p.outcome|capitalize }}{% if p.manual_override %} (corrected){% endif %}">{{ p.outcome[0] }}</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+      {% for m in pending %}
+        <li class="flex items-start gap-3 py-3 text-muted" data-pending>
+          <span class="w-16 shrink-0 truncate">{{ m.display_name }}</span>
+          <span>&mdash;</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>

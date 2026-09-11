@@ -1,0 +1,70 @@
+{% set form_url = url_for('pick_form_partial', slug=syndicate.slug) %}
+<form id="pick-form" class="space-y-5"
+      hx-post="{{ url_for('submit_pick_route', slug=syndicate.slug) }}"
+      hx-target="#pick-panel" hx-swap="outerHTML">
+  <input type="hidden" name="week" value="{{ week }}">
+  <input type="hidden" name="season" value="{{ season }}">
+  {% if editing %}<input type="hidden" name="edit" value="1">{% endif %}
+
+  <div>
+    <label class="field-label" for="game_id">Game</label>
+    <select id="game_id" name="game_id" class="input"
+            hx-get="{{ form_url }}" hx-include="#pick-form" hx-target="#pick-panel" hx-swap="outerHTML">
+      {% for g in games %}
+        <option value="{{ g.id }}" {{ 'selected' if g.id == sel_game_id }}
+                {{ 'disabled' if g.started and syndicate.lock_at_kickoff }}>
+          {{ g.away_abbr }} @ {{ g.home_abbr }}{% if g.line_hint %} · {{ g.line_hint }}{% endif %}{% if g.started %} · Started{% endif %}
+        </option>
+      {% endfor %}
+    </select>
+    {% if sel_game %}<p class="text-sm text-muted mt-1.5">{{ sel_game.kickoff_at|kick }}</p>{% endif %}
+  </div>
+
+  <div>
+    <span class="field-label">Bet</span>
+    <div class="seg" role="radiogroup" aria-label="Bet">
+      {% for value, text in [('SPREAD','Spread'), ('OVER','Over'), ('UNDER','Under')] %}
+        <label>
+          <input type="radio" name="bet_type" value="{{ value }}" class="sr-only"
+                 {{ 'checked' if sel_bet_type == value }}
+                 hx-get="{{ form_url }}" hx-include="#pick-form" hx-target="#pick-panel" hx-swap="outerHTML">
+          {{ text }}
+        </label>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if sel_bet_type == 'SPREAD' and sel_game %}
+    <div>
+      <span class="field-label">Team</span>
+      <div class="seg" role="radiogroup" aria-label="Team">
+        {% for tid, name in [(sel_game.away_team_id, sel_game.away_short),
+                             (sel_game.home_team_id, sel_game.home_short)] %}
+          <label>
+            <input type="radio" name="side_team_id" value="{{ tid }}" class="sr-only"
+                   {{ 'checked' if sel_side == tid }}
+                   hx-get="{{ form_url }}" hx-include="#pick-form" hx-target="#pick-panel" hx-swap="outerHTML">
+            {{ name }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div>
+    <label class="field-label" for="line">Line</label>
+    <input id="line" name="line" class="input" inputmode="decimal" autocomplete="off"
+           value="{{ sel_line }}" required>
+  </div>
+
+  {% if error %}<p class="text-sm text-loss" role="alert">{{ error }}</p>{% endif %}
+
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary flex-1">{{ 'Save' if my_pick else 'Submit' }}</button>
+    {% if my_pick %}
+      <button type="button" class="btn btn-plain"
+              hx-get="{{ form_url }}?week={{ week }}&season={{ season }}"
+              hx-target="#pick-panel" hx-swap="outerHTML">Cancel</button>
+    {% endif %}
+  </div>
+</form>

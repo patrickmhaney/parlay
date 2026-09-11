@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Geist";
+  src: url("/static/fonts/Geist-Variable.woff2?v=1") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Monochrome interface; colour only means a result. Follows the system
+   light/dark setting -- there is no in-app toggle. */
+:root {
+  color-scheme: light;
+  --bg:      #FFFFFF;
+  --surface: #F5F5F5;
+  --ink:     #0A0A0A;
+  --muted:   #737373;
+  --line:    #E5E5E5;
+  --win:     #15803D;
+  --loss:    #B91C1C;
+  --push:    #737373;
+
+  /* chart series, validated for colour-vision deficiency */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg:      #0A0A0A;
+    --surface: #171717;
+    --ink:     #EDEDED;
+    --muted:   #A1A1A1;
+    --line:    #262626;
+    --win:     #4ADE80;
+    --loss:    #F87171;
+    --push:    #A1A1A1;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+  }
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Geist, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "tnum" 1;       /* every number lines up */
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: var(--line); }
+  input, select, button, textarea { font: inherit; color: inherit; }
+}
+
+@layer components {
+  /* --- buttons: one primary per screen --- */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg px-4 h-10 text-sm font-medium
+           transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-primary { @apply bg-ink text-bg hover:opacity-85; }
+  .btn-plain   { @apply text-ink hover:bg-surface; }
+  .link        { @apply text-sm font-medium text-muted hover:text-ink transition-colors; }
+
+  /* --- inputs --- */
+  .input {
+    @apply w-full h-10 rounded-lg border border-line bg-bg px-3 text-base text-ink
+           placeholder:text-muted focus:outline-none focus:border-ink transition-colors;
+    appearance: none;
+  }
+  select.input {
+    padding-right: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+  }
+  .field-label { @apply block text-sm text-muted mb-1.5; }
+
+  /* --- segmented control --- */
+  .seg { @apply flex rounded-lg bg-surface p-0.5; }
+  .seg > label, .seg > a {
+    @apply flex-1 text-center rounded-md h-9 inline-flex items-center justify-center
+           text-sm font-medium text-muted cursor-pointer select-none transition-colors;
+  }
+  .seg > label:has(input:checked), .seg > .on {
+    @apply bg-bg text-ink;
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .seg > label:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+  /* --- lists & tables --- */
+  .rows > * { @apply border-b border-line; }
+  .rows > *:last-child { @apply border-b-0; }
+  .section-title { @apply text-base font-semibold mb-3; }
+  .table { @apply w-full text-sm; }
+  .table th { @apply text-left font-normal text-muted pb-2; }
+  .table td { @apply py-2.5 border-t border-line; }
+  .table .n { @apply text-right whitespace-nowrap; }
+
+
+  /* --- switch (styled checkbox) --- */
+  .switch {
+    @apply relative inline-block w-10 h-6 rounded-full bg-line cursor-pointer transition-colors shrink-0;
+    appearance: none;
+  }
+  .switch::after {
+    content: ""; @apply absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-bg transition-transform;
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  }
+  .switch:checked { @apply bg-ink; }
+  .switch:checked::after { transform: translateX(1rem); }
+}
+
+/* Results: a coloured letter, nothing more. Kept outside @layer because the
+   class names are built at runtime (mark-{{ outcome }}), so Tailwind's content
+   scan can't see them and would prune them. */
+.mark { font-weight: 600; }
+.mark-WIN  { color: var(--win); }
+.mark-LOSS { color: var(--loss); }
+.mark-PUSH { color: var(--push); }
+.pos { color: var(--win); }
+.neg { color: var(--loss); }
+
+.htmx-request.busy, .htmx-request .busy { opacity: .5; transition: opacity .15s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::after { transition: none !important; }
+}

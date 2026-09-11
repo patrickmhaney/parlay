@@ -1,3 +1,42 @@
+# virtualenvs
+venv/
+.venv/
+env/
+
+# python
 __pycache__/
-bets.db
-/venv
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# databases (source of truth is backed up, not committed)
+*.db
+*.duckdb
+*.duckdb.wal
+data/
+db_archive/
+
+# logs & process droppings
+nohup.out
+nohup.err
+*.log
+*.swp
+*.swo
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# build tooling
+tools/tailwindcss
+
+# generated legacy artifacts
+output.csv
+picks.cfg
+
+# screenshot output
+shots/
+
+# personal image, kept locally only
+sadbd_goodwill.png
